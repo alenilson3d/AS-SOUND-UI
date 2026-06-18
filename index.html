@@ -288,7 +288,8 @@
                         <button class="add-music-btn" id="btn-add-files" onclick="document.getElementById('file-input').click()">
                             <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add Files
                         </button>
-                        <input type="file" id="file-input" webkitdirectory directory multiple accept="audio/*" onchange="loadUserFiles(this.files)">
+                        <!-- CORREÇÃO IPHONE: accept atualizado explicitamente com formatos Apple para liberar a seleção de músicas no iOS -->
+                        <input type="file" id="file-input" webkitdirectory directory multiple accept=".mp3,.m4a,.wav,.aac,audio/*" onchange="loadUserFiles(this.files)">
 
                         <button class="reset-eq-btn" id="btn-reset-eq" onclick="resetEqualizer()">
                             <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset EQ
@@ -433,7 +434,7 @@
             ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2.5; ctx.shadowBlur = 1; ctx.shadowColor = '#ffffff'; ctx.stroke(); ctx.shadowBlur = 0;
 
             eqNodes.forEach(node => {
-                let nx = node.x * w; let ny = node.y * h;
+                let nx = node.x * w; ny = node.y * h;
                 ctx.beginPath(); ctx.arc(nx, ny, 16, 0, 2 * Math.PI); ctx.fillStyle = node.bg; ctx.fill();
                 ctx.beginPath(); ctx.arc(nx, ny, 8, 0, 2 * Math.PI); ctx.fillStyle = node.color; ctx.fill();
                 ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.5; ctx.stroke();
@@ -525,6 +526,10 @@
             gainMaster.connect(audioContext.destination);
 
             updateVolumes(); initVUCases(); renderVUs();
+
+            audioElement.onended = function() {
+                nextTrack();
+            };
         }
 
         function applyEQFilters() {
@@ -544,15 +549,20 @@
         }
 
         function loadUserFiles(files) {
-            for(let i = 0; i < files.length; i++) {
-                const file = files[i]; const objectURL = URL.createObjectURL(file);
-                let pathParts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [];
-                let folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "Músicas Avulsas";
+            // CORREÇÃO IPHONE: Se o usuário selecionar arquivos soltos no iOS, joga tudo em uma pasta padrão
+            if (files.length > 0) {
+                for(let i = 0; i < files.length; i++) {
+                    const file = files[i]; const objectURL = URL.createObjectURL(file);
+                    let pathParts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [];
+                    
+                    // Se não tiver caminho de pasta (comum no iOS), define o nome padrão
+                    let folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "Músicas Adulsas - iOS";
 
-                if (!folders[folderName]) { folders[folderName] = []; }
-                folders[folderName].push({ name: file.name, url: objectURL });
+                    if (!folders[folderName]) { folders[folderName] = []; }
+                    folders[folderName].push({ name: file.name, url: objectURL });
+                }
+                renderFolders();
             }
-            renderFolders();
         }
 
         function renderFolders() {
@@ -665,6 +675,13 @@
             setupFader('R', 'R'); 
             setupFader('M', 'M');
             initVUCases();
+
+            // CORREÇÃO SAFARI/IPHONE: Força o desbloqueio do áudio no primeiro toque na tela por segurança do iOS
+            document.body.addEventListener('click', function() {
+                if (audioContext && audioContext.state === 'suspended') {
+                    audioContext.resume();
+                }
+            }, { once: true });
         });
 
         function updateVolumes() { if (!audioContext) return; gainL.gain.value = muteL ? 0 : volL; gainR.gain.value = muteR ? 0 : volR; gainMaster.gain.value = volMaster; }
