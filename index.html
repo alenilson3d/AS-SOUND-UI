@@ -237,6 +237,13 @@
         .column-item { padding: 1.2vh 1vw; border-bottom: 1px solid #222; cursor: pointer; font-size: 1.8vh; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
         .column-item svg { width: 2vh; height: 2vh; stroke: currentColor; fill: none; stroke-width: 2; }
         
+        /* LAYOUT REAJUSTADO PARA INSERÇÃO DO BOTÃO DELETAR SEM PREJUDICAR O TEXTO DAS MÚSICAS */
+        .folder-item-content { display: flex; align-items: center; gap: 6px; width: 100%; justify-content: space-between; overflow: hidden; }
+        .folder-text-wrapper { display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .delete-folder-btn { background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; margin-left: auto; padding: 0 4px; transition: color 0.2s; }
+        .delete-folder-btn:hover { color: #ff3333; }
+        .delete-folder-btn svg { width: 1.8vh; height: 1.8vh; stroke: currentColor; fill: none; stroke-width: 2; }
+
         .column-item.active-folder { background-color: #252525; color: var(--ui-pink) !important; font-weight: bold; border-left: 4px solid var(--ui-pink); }
         .column-item.active-folder svg { stroke: var(--ui-pink); }
         .column-item.active-playing { color: var(--ui-pink) !important; font-weight: bold; border-left: 4px solid var(--ui-pink); }
@@ -270,7 +277,6 @@
 </head>
 <body>
 
-    <!-- ELEMENTO DA TELA DE ANIMAÇÃO INICIAL AJUSTADO -->
     <div class="splash-screen" id="app-splash-screen">
         <div class="splash-logo-container">
             <div class="splash-box">Ui</div>
@@ -619,6 +625,27 @@
             document.getElementById('btn-mode-shuffle').classList.toggle('active', mode === 'shuffle');
         }
 
+        function deleteFolder(folderName, event) {
+            event.stopPropagation();
+            if (confirm(`Deseja realmente remover a pasta "${folderName}" do player?`)) {
+                if (playingFolder === folderName) {
+                    stopAudio();
+                    playingFolder = null;
+                    playingTrackIndex = null;
+                }
+                if (currentFolder === folderName) {
+                    currentFolder = null;
+                }
+                delete folders[folderName];
+                renderFolders();
+                if (currentFolder) {
+                    renderFiles(currentFolder);
+                } else {
+                    document.getElementById('file-list-container').innerHTML = '';
+                }
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             volL = 0; 
             volR = 0; 
@@ -692,7 +719,7 @@
                 return;
             }
 
-            let avgLowGain = 0, avgMidGain = 0, avgHighGain = 0; let lowCount = 0, midCount = 0, highCount = 0;
+            let avgLowGain = 0, avgMidGain = 0, avgHighGain = 0; let lowCount = 0, midCount = 0; let highCount = 0;
 
             eqNodes.forEach(node => {
                 let freq = xToFreq(node.x); let gain = (1 - (node.y - 0.05) / 0.87) * 24 - 12;
@@ -721,13 +748,24 @@
             }
         }
 
+        // ALTERADO: Troca do emoji por vetor SVG real estilo Soundcraft console
         function renderFolders() {
             const container = document.getElementById('folder-list-container'); container.innerHTML = '';
             Object.keys(folders).forEach((folderName) => {
                 const li = document.createElement('li'); li.className = 'column-item';
                 if (currentFolder === folderName) li.className += ' active-folder';
-                li.innerHTML = '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> ' + folderName;
-                li.onclick = function(e) { e.stopPropagation(); currentFolder = folderName; renderFolders(); renderFiles(folderName); };
+                
+                li.innerHTML = `<div class="folder-item-content">
+                                    <div class="folder-text-wrapper">
+                                        <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                        <span class="folder-text">${folderName}</span>
+                                    </div>
+                                    <button class="delete-folder-btn" onclick="deleteFolder('${folderName.replace(/'/g, "\\'")}', event)">
+                                        <svg viewBox="0 0 24 24"><polyline points="3 6 5 3 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                                    </button>
+                                </div>`;
+                                
+                li.onclick = function(e) { currentFolder = folderName; renderFolders(); renderFiles(folderName); };
                 container.appendChild(li);
             });
             if (!currentFolder && Object.keys(folders).length > 0) { currentFolder = Object.keys(folders)[0]; renderFolders(); renderFiles(currentFolder); }
@@ -739,7 +777,7 @@
             tracks.forEach((track, index) => {
                 const li = document.createElement('li'); li.className = 'column-item';
                 if (playingTrackIndex === index && playingFolder === folderName) { li.className += ' active-playing'; }
-                li.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> /' + track.name;
+                li.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> ' + track.name;
                 li.onclick = function(e) { e.stopPropagation(); selectTrack(index); };
                 container.appendChild(li);
             });
