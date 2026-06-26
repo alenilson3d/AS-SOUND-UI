@@ -31,7 +31,7 @@
             overflow: hidden;
         }
 
-        /* --- TELA DE INTRODUÇÃO (SPLASH SCREEN) MODIFICADA --- */
+        /* --- TELA DE INTRODUÇÃO (SPLASH SCREEN) --- */
         .splash-screen {
             position: fixed;
             top: 0;
@@ -54,7 +54,6 @@
             animation: splashEntrance 1.2s ease-out forwards;
         }
 
-        /* Letra UI em cima com o retângulo em amarelo */
         .splash-box {
             font-style: italic;
             font-weight: 900;
@@ -68,7 +67,6 @@
             text-align: center;
         }
 
-        /* Resto da logo embaixo (sem neon) */
         .splash-text {
             font-weight: 900;
             font-size: 6.5vh;
@@ -160,14 +158,12 @@
             background: linear-gradient(to bottom, #444, #262626); border: 1px solid #111; color: #999; border-radius: 2px; cursor: default;
         }
 
-        /* Container do Fader e VUs de LED Estilizados */
         .fader-vu-container {
             flex: 1; display: flex; width: 95%; justify-content: space-between;
             padding: 1vh 0.4vw; background: #0c0f12; border: 1px solid #1a222d; margin: 0.5vh 0; position: relative; overflow: hidden;
         }
         .channel-strip.master .fader-vu-container { margin-top: 1vh; margin-bottom: 1vh; }
 
-        /* Elemento Canvas do VU fatiado */
         .vu-canvas-element {
             width: 1.2vw;
             max-width: 11px;
@@ -187,9 +183,6 @@
         .fader-handle::after { content: ''; position: absolute; top: 50%; left: 0; width: 100%; height: 2px; background: #fff; transform: translateY(-50%); }
         .channel-strip.master .fader-handle { background: linear-gradient(to bottom, #ffffff 0%, #cccccc 40%, #777777 50%, #333333 100%); }
 
-        .column-item.active-folder { background-color: #252525; color: var(--ui-pink) !important; font-weight: bold; border-left: 4px solid var(--ui-pink); }
-        .column-item.active-folder svg { stroke: var(--ui-pink); }
-
         .channel-label { background: #000; width: 100%; text-align: center; font-weight: bold; padding: 6px 0; text-transform: uppercase; font-size: 1.5vh; }
         .channel-label.player-l, .channel-label.player-r { color: var(--ui-pink); }
         .channel-label.master-lbl { color: var(--ui-amber); }
@@ -197,11 +190,13 @@
         /* --- Center Screen --- */
         .center-player { flex: 1; display: flex; flex-direction: column; background-color: #111; width: 73vw; height: 100%; position: relative; }
 
+        /* MODIFICADO: Ajustado para acomodar a nova barra de progresso no meio */
         .transport-bar {
             background: linear-gradient(to bottom, #222, #151515); height: 12%;
             display: flex; align-items: center; justify-content: space-between; padding: 0 1vw; border-bottom: 1px solid #000;
+            gap: 2vw;
         }
-        .transport-buttons { display: flex; gap: 4px; align-items: center; }
+        .transport-buttons { display: flex; gap: 4px; align-items: center; flex-shrink: 0; }
         .trans-btn {
             background: linear-gradient(to bottom, #333, #1f1f1f); border: 1px solid #0a0a0a;
             color: #eee; width: 7vh; height: 5vh; cursor: pointer; border-radius: 3px; display: flex; align-items: center; justify-content: center;
@@ -224,7 +219,34 @@
         }
         .reset-eq-btn svg { width: 2vh; height: 2vh; stroke: currentColor; fill: none; stroke-width: 2.5; }
 
-        .time-counter { font-family: monospace; text-align: right; }
+        /* ADICIONADO: Estilo da nova barra de progresso no meio da transport-bar */
+        .progress-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 1vw;
+        }
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 12px;
+            background: #070707;
+            border: 1px solid #252525;
+            border-radius: 6px;
+            position: relative;
+            cursor: pointer;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #be1249, var(--ui-pink));
+            border-radius: 5px;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(223, 26, 90, 0.5);
+        }
+
+        .time-counter { font-family: monospace; text-align: right; flex-shrink: 0; }
         .time-now { color: var(--ui-amber); font-size: 3vh; font-weight: bold; font-family: 'Courier New', monospace; line-height: 1; }
         .time-total { color: #777; font-size: 1.8vh; font-weight: bold; }
 
@@ -237,7 +259,6 @@
         .column-item { padding: 1.2vh 1vw; border-bottom: 1px solid #222; cursor: pointer; font-size: 1.8vh; color: #ccc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
         .column-item svg { width: 2vh; height: 2vh; stroke: currentColor; fill: none; stroke-width: 2; }
         
-        /* LAYOUT REAJUSTADO PARA INSERÇÃO DO BOTÃO DELETAR SEM PREJUDICAR O TEXTO DAS MÚSICAS */
         .folder-item-content { display: flex; align-items: center; gap: 6px; width: 100%; justify-content: space-between; overflow: hidden; }
         .folder-text-wrapper { display: flex; align-items: center; gap: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .delete-folder-btn { background: none; border: none; color: #666; cursor: pointer; display: flex; align-items: center; margin-left: auto; padding: 0 4px; transition: color 0.2s; }
@@ -273,6 +294,108 @@
         
         .foot-btn#btn-mute-fx.active-warn { background: var(--ui-amber) !important; color: #000 !important; font-weight: 900; }
         .foot-btn#btn-mute-all.active-danger { background: #ff3333 !important; color: #fff !important; font-weight: 900; }
+
+        /* --- DESIGN DO NOVO MODAL PROFISSIONAL CENTRO DA TELA --- */
+        .ui-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s;
+        }
+        .ui-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .ui-modal-box {
+            background: linear-gradient(to bottom, #2c2c2c 0%, #151515 100%);
+            border: 2px solid #3d3d3d;
+            border-top: 4px solid var(--ui-pink);
+            border-radius: 8px;
+            width: 48vw;
+            max-width: 440px;
+            padding: 3vh 2.5vw;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+        }
+        .ui-modal-overlay.show .ui-modal-box {
+            transform: scale(1);
+        }
+        .ui-modal-title {
+            font-size: 2.4vh;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #fff;
+            margin-bottom: 2vh;
+            letter-spacing: 1.5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .ui-modal-title svg {
+            width: 3vh;
+            height: 3vh;
+            stroke: var(--ui-pink);
+            fill: none;
+            stroke-width: 2.5;
+        }
+        .ui-modal-text {
+            font-size: 1.9vh;
+            color: #dddddd;
+            margin-bottom: 3.5vh;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+        .ui-modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1.5vw;
+        }
+        .modal-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 1.2vh 2.2vw;
+            font-size: 1.6vh;
+            font-weight: 900;
+            text-transform: uppercase;
+            border: 1px solid #000;
+            border-radius: 4px;
+            cursor: pointer;
+            min-width: 110px;
+            transition: background 0.2s, color 0.2s;
+        }
+        .modal-btn-confirm {
+            background: var(--ui-pink);
+            color: #fff;
+            box-shadow: inset 0 1px 0 #ff6b9d;
+        }
+        .modal-btn-confirm:hover {
+            background: #be1249;
+        }
+        .modal-btn-cancel {
+            background: linear-gradient(to bottom, #444, #2a2a2a);
+            color: #bbbbbb;
+            box-shadow: inset 0 1px 0 #555;
+        }
+        .modal-btn-cancel:hover {
+            background: #333;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
@@ -281,6 +404,21 @@
         <div class="splash-logo-container">
             <div class="splash-box">Ui</div>
             <div class="splash-text">SoundPlayer</div>
+        </div>
+    </div>
+
+    <!-- CAIXA DE CONFIRMAÇÃO ESTILIZADA NO CENTRO DA TELA -->
+    <div class="ui-modal-overlay" id="delete-modal">
+        <div class="ui-modal-box">
+            <div class="ui-modal-title">
+                <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Remover Pasta
+            </div>
+            <div class="ui-modal-text" id="delete-modal-text">Deseja realmente apagar esta pasta?</div>
+            <div class="ui-modal-actions">
+                <button type="button" class="modal-btn modal-btn-cancel" onclick="closeDeleteModal()">Cancelar</button>
+                <button type="button" class="modal-btn modal-btn-confirm" id="modal-confirm-btn">Confirmar</button>
+            </div>
         </div>
     </div>
 
@@ -354,6 +492,14 @@
                             <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg> Reset EQ
                         </button>
                     </div>
+
+                    <!-- ADICIONADO: Elemento estrutural da Barra de Progresso Interativa -->
+                    <div class="progress-container">
+                        <div class="progress-bar-wrapper" id="progress-bar-container" onclick="seekAudio(event)">
+                            <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                        </div>
+                    </div>
+
                     <div class="time-counter">
                         <div class="time-now" id="time-current">00:00</div>
                         <div class="time-total" id="time-duration">00:00</div>
@@ -625,25 +771,60 @@
             document.getElementById('btn-mode-shuffle').classList.toggle('active', mode === 'shuffle');
         }
 
-        function deleteFolder(folderName, event) {
-            event.stopPropagation();
-            if (confirm(`Deseja realmente remover a pasta "${folderName}" do player?`)) {
-                if (playingFolder === folderName) {
-                    stopAudio();
-                    playingFolder = null;
-                    playingTrackIndex = null;
-                }
-                if (currentFolder === folderName) {
-                    currentFolder = null;
-                }
-                delete folders[folderName];
-                renderFolders();
-                if (currentFolder) {
-                    renderFiles(currentFolder);
-                } else {
-                    document.getElementById('file-list-container').innerHTML = '';
-                }
+        // --- CONTROLES DE INTERFACE DO MODAL EXCLUSIVO ---
+        function askDeleteFolder(folderName, event) {
+            if (event) {
+                event.stopPropagation();
+                event.preventDefault();
             }
+            const modal = document.getElementById('delete-modal');
+            const modalText = document.getElementById('delete-modal-text');
+            const confirmBtn = document.getElementById('modal-confirm-btn');
+
+            modalText.innerHTML = `Deseja realmente remover a pasta<br><strong style="color:var(--ui-pink); font-size: 2.2vh;">"${folderName}"</strong> do player?`;
+            modal.classList.add('show');
+
+            confirmBtn.onclick = function() {
+                executeDeleteFolder(folderName);
+                closeDeleteModal();
+            };
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.remove('show');
+        }
+
+        function executeDeleteFolder(folderName) {
+            if (playingFolder === folderName) {
+                stopAudio();
+                playingFolder = null;
+                playingTrackIndex = null;
+            }
+            if (currentFolder === folderName) {
+                currentFolder = null;
+            }
+            delete folders[folderName];
+            
+            const fileInput = document.getElementById('file-input');
+            if(fileInput) fileInput.value = "";
+            
+            renderFolders();
+            if (currentFolder) {
+                renderFiles(currentFolder);
+            } else {
+                document.getElementById('file-list-container').innerHTML = '';
+            }
+        }
+
+        // ADICIONADO: Função para controlar a navegação/click na barra de progresso
+        function seekAudio(event) {
+            if (!audioElement || !audioElement.duration) return;
+            const container = document.getElementById('progress-bar-container');
+            const rect = container.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const percentage = clickX / rect.width;
+            
+            audioElement.currentTime = percentage * audioElement.duration;
         }
 
         window.addEventListener('DOMContentLoaded', () => {
@@ -739,33 +920,41 @@
                     const file = files[i]; const objectURL = URL.createObjectURL(file);
                     let pathParts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [];
                     
-                    let folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "Músicas Avulsas - iOS";
+                    let folderName = pathParts.length > 1 ? pathParts[pathParts.length - 2] : "Músicas Avulsas";
 
                     if (!folders[folderName]) { folders[folderName] = []; }
                     folders[folderName].push({ name: file.name, url: objectURL });
                 }
+                
+                document.getElementById('file-input').value = "";
                 renderFolders();
             }
         }
 
-        // ALTERADO: Troca do emoji por vetor SVG real estilo Soundcraft console
         function renderFolders() {
             const container = document.getElementById('folder-list-container'); container.innerHTML = '';
             Object.keys(folders).forEach((folderName) => {
                 const li = document.createElement('li'); li.className = 'column-item';
                 if (currentFolder === folderName) li.className += ' active-folder';
                 
+                const safeFolderName = folderName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                
                 li.innerHTML = `<div class="folder-item-content">
                                     <div class="folder-text-wrapper">
                                         <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                                         <span class="folder-text">${folderName}</span>
                                     </div>
-                                    <button class="delete-folder-btn" onclick="deleteFolder('${folderName.replace(/'/g, "\\'")}', event)">
+                                    <button class="delete-folder-btn" type="button" onclick="askDeleteFolder('${safeFolderName}', event)">
                                         <svg viewBox="0 0 24 24"><polyline points="3 6 5 3 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                                     </button>
                                 </div>`;
                                 
-                li.onclick = function(e) { currentFolder = folderName; renderFolders(); renderFiles(folderName); };
+                li.onclick = function(e) { 
+                    if(e.target.closest('.delete-folder-btn')) return;
+                    currentFolder = folderName; 
+                    renderFolders(); 
+                    renderFiles(folderName); 
+                };
                 container.appendChild(li);
             });
             if (!currentFolder && Object.keys(folders).length > 0) { currentFolder = Object.keys(folders)[0]; renderFolders(); renderFiles(currentFolder); }
@@ -819,12 +1008,23 @@
             if (!audioElement) return; audioElement.pause(); audioElement.currentTime = 0;
             const playBtn = document.getElementById('btn-play'); playBtn.classList.remove('active'); 
             playBtn.innerHTML = '<svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+            
+            // MODIFICADO: Reseta a barra de progresso visual
+            document.getElementById('progress-bar-fill').style.width = '0%';
         }
 
         function nextTrack() { if (!playingFolder || !folders[playingFolder] || folders[playingFolder].length === 0) return; let nextIndex = (playingTrackIndex !== null) ? playingTrackIndex + 1 : 0; if (nextIndex >= folders[playingFolder].length) nextIndex = 0; selectTrack(nextIndex); }
         function prevTrack() { if (!playingFolder || !folders[playingFolder] || folders[playingFolder].length === 0) return; let prevIndex = (playingTrackIndex !== null) ? playingTrackIndex - 1 : 0; if (prevIndex < 0) prevIndex = folders[playingFolder].length - 1; selectTrack(prevIndex); }
 
-        audioElement.ontimeupdate = function() { document.getElementById('time-current').innerText = formatTime(audioElement.currentTime); };
+        // MODIFICADO: Atualiza o tempo numérico e também preenche a barra de progresso visualmente
+        audioElement.ontimeupdate = function() { 
+            document.getElementById('time-current').innerText = formatTime(audioElement.currentTime); 
+            
+            if (audioElement.duration) {
+                const progressPercent = (audioElement.currentTime / audioElement.duration) * 100;
+                document.getElementById('progress-bar-fill').style.width = progressPercent + '%';
+            }
+        };
         function formatTime(secs) { let m = Math.floor(secs / 60); let s = Math.floor(secs % 60); return (m < 10 ? '0' + m : m) + ':' + (s < 10 ? '0' + s : s); }
 
         function setupFader(id, type) {
