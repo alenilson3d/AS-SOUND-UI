@@ -1065,6 +1065,34 @@ html, body {
 }
 
 </style>
+<style>
+
+/* AS SOUND V5 — VU laterais mais finos e área central ampliada.
+   Somente visual/layout; nenhuma lógica JavaScript foi alterada. */
+.main-content{gap:4px!important;}
+.channel-strip,.channel-strip.master{
+  width:5.2vw!important;min-width:68px!important;max-width:84px!important;
+  flex:0 0 5.2vw!important;padding-left:.18vw!important;padding-right:.18vw!important;
+}
+.db-display,.strip-buttons,.fader-vu-container,.channel-label{width:94%!important;}
+.db-display{font-size:1.15vh!important;padding:5px 0!important;}
+.strip-buttons{gap:2px!important;}
+.strip-btn{font-size:1.05vh!important;padding:4px 0!important;}
+.fader-vu-container{padding-left:.2vw!important;padding-right:.2vw!important;}
+.fader-rail{width:7px!important;}
+.fader-handle{width:3.0vh!important;min-width:22px!important;height:5.6vh!important;min-height:32px!important;}
+.channel-label{font-size:1.1vh!important;padding:8px 0!important;}
+.center-player{flex:1 1 auto!important;width:auto!important;min-width:0!important;}
+.browser-grid,.eq-container{width:100%!important;box-sizing:border-box!important;}
+.browser-grid{flex:1 1 auto!important;min-height:0!important;}
+.footer-bar{flex-shrink:0!important;}
+@media(max-width:900px){
+ .channel-strip,.channel-strip.master{width:52px!important;min-width:52px!important;max-width:52px!important;flex-basis:52px!important;}
+ .channel-label{font-size:1vh!important;}
+}
+
+</style>
+<style id="as-sound-fullscreen-style">.fullscreen-btn{display:inline-flex;align-items:center;justify-content:center;width:3.8vh;height:3.8vh;min-width:28px;min-height:28px;margin-left:6px;padding:0;border:1px solid #26333d;border-radius:4px;background:linear-gradient(to bottom,#202a31,#0d1216);color:#b9c4cc;cursor:pointer}.fullscreen-btn:hover{color:#fff;border-color:#ff123d;box-shadow:0 0 8px rgba(255,18,61,.35)}.fullscreen-btn svg{width:2.1vh;height:2.1vh;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.right-info{gap:.6vw!important}</style>
 </head>
 <body>
 
@@ -1101,7 +1129,14 @@ html, body {
                 </button>
             </div>
             <div class="right-info">
-                <div class="init-tag">* Init *</div>
+                
+<button class="fullscreen-btn" id="btn-fullscreen" type="button"
+        title="Tela cheia" aria-label="Tela cheia">
+  <svg viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M8 3H3v5M16 3h5v5M21 16v5h-5M3 16v5h5"/>
+  </svg>
+</button>
+<div class="init-tag">* Init *</div>
                 <div class="ui-logo">Ui</div>
             </div>
         </header>
@@ -1851,5 +1886,6 @@ html, body {
             drawSegmentedVU('M1', levelM); drawSegmentedVU('M2', levelM);
         }
     </script>
+<script id="as-sound-fullscreen-script">(function(){function toggle(){const d=document,r=document.documentElement;if(!d.fullscreenElement&&!d.webkitFullscreenElement){const f=r.requestFullscreen||r.webkitRequestFullscreen;if(f)f.call(r)}else{const f=d.exitFullscreen||d.webkitExitFullscreen;if(f)f.call(d)}}document.addEventListener('DOMContentLoaded',function(){const b=document.getElementById('btn-fullscreen');if(b)b.addEventListener('click',toggle)})})();</script>
 </body>
 </html>
