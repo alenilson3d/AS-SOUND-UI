@@ -1887,5 +1887,187 @@ html, body {
         }
     </script>
 <script id="as-sound-fullscreen-script">(function(){function toggle(){const d=document,r=document.documentElement;if(!d.fullscreenElement&&!d.webkitFullscreenElement){const f=r.requestFullscreen||r.webkitRequestFullscreen;if(f)f.call(r)}else{const f=d.exitFullscreen||d.webkitExitFullscreen;if(f)f.call(d)}}document.addEventListener('DOMContentLoaded',function(){const b=document.getElementById('btn-fullscreen');if(b)b.addEventListener('click',toggle)})})();</script>
+<script id="as-sound-persist-script">
+/* =========================================================
+   AS SOUND PLAYER - MODULO DE BIBLIOTECA PERSISTENTE
+   Adicionado sem alterar nenhuma linha do codigo original.
+   Salva as pastas e as musicas importadas no IndexedDB do
+   navegador, restaurando tudo automaticamente ao reabrir.
+   ========================================================= */
+(function () {
+    const DB_NAME = 'ASSoundPlayerDB';
+    const DB_VER = 1;
+    const STORE = 'tracks';
+    let dbPromise = null;
+    let idbOk = true;
+
+    /* ---------- aviso discreto na tela ---------- */
+    function toast(msg, ms) {
+        let box = document.getElementById('as-persist-toast');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'as-persist-toast';
+            box.style.cssText = 'position:fixed;left:50%;bottom:12px;transform:translateX(-50%);' +
+                'background:rgba(0,0,0,.88);color:#eee;border:1px solid rgba(255,255,255,.25);' +
+                'border-radius:8px;padding:8px 14px;font:600 12px/1.35 sans-serif;z-index:99999;' +
+                'max-width:88vw;text-align:center;pointer-events:none;opacity:0;transition:opacity .25s;';
+            document.body.appendChild(box);
+        }
+        box.innerHTML = msg;
+        box.style.opacity = '1';
+        clearTimeout(box._t);
+        box._t = setTimeout(() => { box.style.opacity = '0'; }, ms || 2600);
+    }
+
+    /* ---------- banco de dados ---------- */
+    function openDB() {
+        if (dbPromise) return dbPromise;
+        dbPromise = new Promise((resolve, reject) => {
+            let req;
+            try { req = indexedDB.open(DB_NAME, DB_VER); }
+            catch (e) { reject(e); return; }
+            req.onupgradeneeded = function (e) {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains(STORE)) {
+                    const s = db.createObjectStore(STORE, { keyPath: 'id' });
+                    s.createIndex('folder', 'folder', { unique: false });
+                }
+            };
+            req.onsuccess = function (e) { resolve(e.target.result); };
+            req.onerror = function (e) { reject(e.target.error || new Error('IndexedDB indisponivel')); };
+            req.onblocked = function () { reject(new Error('IndexedDB bloqueado')); };
+        });
+        return dbPromise;
+    }
+
+    function saveTracks(fileList) {
+        return openDB().then(db => new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            const store = tx.objectStore(STORE);
+            const stamp = Date.now();
+            fileList.forEach((file, i) => {
+                const parts = file.webkitRelativePath ? file.webkitRelativePath.split('/') : [];
+                const folder = parts.length > 1 ? parts[parts.length - 2] : 'Músicas Avulsas';
+                store.put({
+                    id: folder + '||' + file.name,
+                    folder: folder,
+                    name: file.name,
+                    order: i,
+                    savedAt: stamp,
+                    blob: file
+                });
+            });
+            tx.oncomplete = resolve;
+            tx.onerror = function () { reject(tx.error); };
+            tx.onabort = function () { reject(tx.error); };
+        }));
+    }
+
+    function readAll() {
+        return openDB().then(db => new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, 'readonly');
+            const req = tx.objectStore(STORE).getAll();
+            req.onsuccess = function () { resolve(req.result || []); };
+            req.onerror = function () { reject(req.error); };
+        }));
+    }
+
+    function deleteFolderFromDB(folderName) {
+        return openDB().then(db => new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            const store = tx.objectStore(STORE);
+            const idx = store.index('folder');
+            const req = idx.openCursor(IDBKeyRange.only(folderName));
+            req.onsuccess = function (e) {
+                const cur = e.target.result;
+                if (cur) { cur.delete(); cur.continue(); }
+            };
+            tx.oncomplete = resolve;
+            tx.onerror = function () { reject(tx.error); };
+        }));
+    }
+
+    function clearDB() {
+        return openDB().then(db => new Promise((resolve, reject) => {
+            const tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).clear();
+            tx.oncomplete = resolve;
+            tx.onerror = function () { reject(tx.error); };
+        }));
+    }
+
+    /* ---------- intercepta a importacao de pastas ---------- */
+    const originalLoad = window.loadUserFiles;
+    window.loadUserFiles = function (files) {
+        const copy = Array.prototype.slice.call(files || []);
+        originalLoad.apply(this, arguments);
+        if (!copy.length || !idbOk) return;
+        saveTracks(copy)
+            .then(() => toast('&#10003; ' + copy.length + ' música(s) salvas na biblioteca do player'))
+            .catch(err => {
+                idbOk = false;
+                console.warn('[AS SOUND] Falha ao salvar biblioteca:', err);
+                toast('Não foi possível salvar a biblioteca neste modo.<br>Abra o player por um servidor/atalho PWA (http ou https).', 5000);
+            });
+    };
+
+    /* ---------- intercepta a exclusao de pasta ---------- */
+    const originalDelete = window.executeDeleteFolder;
+    window.executeDeleteFolder = function (folderName) {
+        originalDelete.apply(this, arguments);
+        if (!idbOk) return;
+        deleteFolderFromDB(folderName).catch(err => console.warn('[AS SOUND] Falha ao remover pasta salva:', err));
+    };
+
+    /* ---------- restauracao ao abrir ---------- */
+    function restore() {
+        return readAll().then(rows => {
+            if (!rows.length) return;
+            rows.sort((a, b) => (a.savedAt - b.savedAt) || (a.order - b.order) || a.name.localeCompare(b.name));
+            let count = 0;
+            rows.forEach(r => {
+                if (!r.blob) return;
+                let url;
+                try { url = URL.createObjectURL(r.blob); } catch (e) { return; }
+                if (!folders[r.folder]) folders[r.folder] = [];
+                folders[r.folder].push({ name: r.name, url: url });
+                count++;
+            });
+            if (!count) return;
+            renderFolders();
+            if (currentFolder) renderFiles(currentFolder);
+            toast('Biblioteca restaurada: ' + Object.keys(folders).length +
+                  ' pasta(s), ' + count + ' música(s)');
+        }).catch(err => {
+            idbOk = false;
+            console.warn('[AS SOUND] Biblioteca salva indisponivel:', err);
+        });
+    }
+
+    /* ---------- utilitario opcional (console) ---------- */
+    window.asLimparBibliotecaSalva = function () {
+        return clearDB().then(() => {
+            Object.keys(folders).forEach(f => { delete folders[f]; });
+            currentFolder = null;
+            renderFolders();
+            document.getElementById('file-list-container').innerHTML = '';
+            toast('Biblioteca salva apagada.');
+        });
+    };
+
+    function start() {
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().catch(() => {});
+        }
+        setTimeout(restore, 300);
+    }
+
+    if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
+</script>
 </body>
 </html>
